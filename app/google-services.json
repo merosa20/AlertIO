@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1046520686983",
+    "firebase_url": "https://alertio-860f1.firebaseio.com",
+    "project_id": "alertio-860f1",
+    "storage_bucket": "alertio-860f1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046520686983:android:edc4b60df46eb0f5",
+        "android_client_info": {
+          "package_name": "com.alertio.root.alertio"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1046520686983-9kpolp0bbd7b201i4ljb92nmm2375loi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alertio.root.alertio",
+            "certificate_hash": "054d9fa0ab3879bd7b3db5244d00a72dba222d59"
+          }
+        },
+        {
+          "client_id": "1046520686983-craq8of3it3eii19fqg5ncfi9gho6j5f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfFhz1jr0sOJVB5jDZaWi-ORe1rxl3mX4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1046520686983-craq8of3it3eii19fqg5ncfi9gho6j5f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

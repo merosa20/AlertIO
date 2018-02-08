@@ -20,7 +20,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -56,6 +59,7 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
+    Toolbar mapToolbar;
     private MapView mapView;
 
     private FirebaseAuth mAuth;
@@ -71,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
     private String mLatitude;
     private String mLongitude;
 
-    private Map mLocation = new HashMap();
     private Map userPost = new HashMap();
 
     //private String mUserId = null;
@@ -87,12 +90,14 @@ public class MainActivity extends AppCompatActivity {
     Map <String, String> descm = new HashMap<String, String>();
     Map <String, String> idm = new HashMap<String, String>();
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Mapbox.getInstance(this, "pk.eyJ1Ijoic21hbW1lcmkiLCJhIjoiY2pkYWgwbnhhMG5jcTMzcDcwcjQxZGwzOCJ9.Dr4cBXkdzF3OOzZgX9kZGw");
         setContentView(R.layout.activity_main);
+
+        //mapToolbar = (Toolbar) findViewById(R.id.map_toolbar);
+        //setSupportActionBar(mapToolbar);
 
         mapView = (MapView) findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
@@ -160,39 +165,28 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }, new IntentFilter(LocationMonitoringService.ACTION_LOCATION_BROADCAST)
         );
-
-        mPostButton = (FloatingActionButton) findViewById(R.id.post_alert_button);
-        mPostButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //mUserId = mAuth.getCurrentUser().getUid();
-
-                if (mLatitude != null && mLongitude != null) {
-                    DatabaseReference alertRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS");
-                    String pushID = alertRef.push().getKey();
-                    DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS").child(pushID);
-
-                    //DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS").child(mUserId);
-
-                    mCalendar = Calendar.getInstance();
-                    mSimpleDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    String formattedDate = mSimpleDate.format(mCalendar.getTime());
-
-                    mLocation.put("lat", mLatitude);
-                    mLocation.put("lng", mLongitude);
-                    String lastSeen = formattedDate;
-
-                    userPost.put("TAG", "Danger");
-                    userPost.put("Description", "New Danger");
-                    userPost.put("Position", mLocation);
-                    userPost.put("At", lastSeen);
-
-                    userRef.setValue(userPost);
-                }
-            }
-        });
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.map_menu, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if(id == R.id.action_post_alert){
+            postAlert();
+        }
+        else if(id == R.id.action_log_out){
+            signOut();
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public void onStart() {
@@ -241,11 +235,42 @@ public class MainActivity extends AppCompatActivity {
         mapView.onSaveInstanceState(outState);
     }
 
+    //Post Alert Method
+    public void postAlert() {
+        if (mLatitude != null && mLongitude != null) {
+            DatabaseReference alertRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS");
+            String pushID = alertRef.push().getKey();
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS").child(pushID);
+
+            //DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS").child(mUserId);
+
+            mCalendar = Calendar.getInstance();
+            mSimpleDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedDate = mSimpleDate.format(mCalendar.getTime());
+
+            String lastSeen = formattedDate;
+
+            userPost.put("TAG", "Danger");
+            userPost.put("Description", "New Danger");
+            userPost.put("lat", mLatitude);
+            userPost.put("lng", mLongitude);
+            userPost.put("At", lastSeen);
+
+            userRef.setValue(userPost);
+        }
+    }
+
+    //Sign out Method
+    public void signOut() {
+        mAuth.signOut();
+        Intent intentLg = new Intent(MainActivity.this, GoogleSignInActivity.class);
+        startActivity(intentLg);
+    }
+
     /**
      * Step 1: Check Google Play services
      */
     private void startStep1() {
-
         //Check whether this user has installed Google play service which is being used by Location updates.
         if (isGooglePlayServicesAvailable()) {
 

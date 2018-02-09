@@ -3,12 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
 
-    <item android:id="@+id/action_post_alert"
-        android:title="@string/action_post_alert"
-        android:icon="@drawable/ic_add_alert_24dp"
-        android:orderInCategory="100"
-        app:showAsAction="ifRoom" />
-
     <item android:id="@+id/action_log_out"
         android:title="@string/action_log_out"
         android:icon="@drawable/ic_person_outline_24dp"

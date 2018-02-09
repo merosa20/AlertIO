@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Post Alert"
+        android:textColor="@color/colorAccent"
+        android:paddingBottom="30dp"
+        android:id="@+id/alert" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Alert Tag"
+        android:id="@+id/tag" />
+
+    <EditText
+        android:id="@+id/alert_tag"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter the tag here.."
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Alert Description"
+        android:id="@+id/description" />
+
+    <EditText
+        android:id="@+id/alert_description"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter the description here.." />
+</LinearLayout>

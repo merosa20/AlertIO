@@ -107,12 +107,12 @@ public class LocationMonitoringService extends Service implements
             Log.d(TAG, "== location != null");
 
             //Send result to activities
-            sendMessageToUI(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+            sendMessageToUI(location.getLatitude(), location.getLongitude());
         }
 
     }
 
-    private void sendMessageToUI(String lat, String lng) {
+    private void sendMessageToUI(double lat, double lng) {
 
         Log.d(TAG, "Sending info...");
 

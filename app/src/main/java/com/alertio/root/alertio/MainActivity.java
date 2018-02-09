@@ -6,8 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -22,11 +20,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.alertio.root.alertio.services.LocationMonitoringService;
@@ -41,6 +40,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
+import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
@@ -48,19 +50,20 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    private static final String TAG = "MainActivity";
+    private boolean mAlreadyStartedService = false;
 
-    Toolbar mapToolbar;
+    //private Toolbar mapToolbar;
     private MapView mapView;
+    private FloatingActionButton mPostButton;
+    private EditText tag = null;
+    private EditText description = null;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -68,22 +71,13 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseDatabase fbDataBase;
     private DatabaseReference FrameDBRef;
 
-    private FloatingActionButton mPostButton;
-
-    private boolean mAlreadyStartedService = false;
-
-    private String mLatitude;
-    private String mLongitude;
-
-    private Map userPost = new HashMap();
-
-    //private String mUserId = null;
+    private Double mLatitude;
+    private Double mLongitude;
     private Calendar mCalendar;
     private SimpleDateFormat mSimpleDate;
 
-    private static final String TAG = "MainActivity";
+    private Map userPost = new HashMap();
     Float lat; Float lng; String TAGG; String desc;
-
     Map <String, Double> latm = new HashMap<String, Double>();
     Map <String, Double> lngm = new HashMap<String, Double>();
     Map <String, String> tagm = new HashMap<String, String>();
@@ -99,7 +93,25 @@ public class MainActivity extends AppCompatActivity {
         //mapToolbar = (Toolbar) findViewById(R.id.map_toolbar);
         //setSupportActionBar(mapToolbar);
 
-        mapView = (MapView) findViewById(R.id.mapView);
+        mPostButton = (FloatingActionButton) findViewById(R.id.floatingActionButton);
+        mPostButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showInputDialog();
+            }
+        });
+
+        //TODO : SIGN OUT BUTTON
+
+        mapView = findViewById(R.id.mapView);
+        mapView.setStyleUrl(Style.MAPBOX_STREETS);
+
+        if (null != mLatitude && null != mLongitude) {
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(new LatLng(mLatitude, mLongitude)) // Sets the center of the map to Chicago
+                    .zoom(11)                            // Sets the zoom
+                    .build();
+        }
         mapView.onCreate(savedInstanceState);
 
         mAuth = FirebaseAuth.getInstance();
@@ -160,8 +172,8 @@ public class MainActivity extends AppCompatActivity {
                 new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
-                        mLatitude = intent.getStringExtra(LocationMonitoringService.EXTRA_LATITUDE);
-                        mLongitude = intent.getStringExtra(LocationMonitoringService.EXTRA_LONGITUDE);
+                        mLatitude = intent.getDoubleExtra(LocationMonitoringService.EXTRA_LATITUDE, 0.5);
+                        mLongitude = intent.getDoubleExtra(LocationMonitoringService.EXTRA_LONGITUDE, 0.5);
                     }
                 }, new IntentFilter(LocationMonitoringService.ACTION_LOCATION_BROADCAST)
         );
@@ -179,10 +191,7 @@ public class MainActivity extends AppCompatActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if(id == R.id.action_post_alert){
-            postAlert();
-        }
-        else if(id == R.id.action_log_out){
+        if(id == R.id.action_log_out){
             signOut();
         }
         return super.onOptionsItemSelected(item);
@@ -221,6 +230,62 @@ public class MainActivity extends AppCompatActivity {
         mapView.onLowMemory();
     }
 
+    //Post Alert Method
+    protected void postAlert(String postTag, String postDesc) {
+        if (null != mLatitude && null != mLongitude) {
+            DatabaseReference alertRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS");
+            String pushID = alertRef.push().getKey();
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS").child(pushID);
+
+            mCalendar = Calendar.getInstance();
+            mSimpleDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String formattedDate = mSimpleDate.format(mCalendar.getTime());
+
+            userPost.put("TAG", postTag);
+            userPost.put("Description", postDesc);
+            userPost.put("lat", mLatitude);
+            userPost.put("lng", mLongitude);
+            userPost.put("At", formattedDate);
+
+            userRef.setValue(userPost);
+        }
+    }
+
+    protected void showInputDialog() {
+
+        // get prompts.xml view
+        LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
+        View promptView = layoutInflater.inflate(R.layout.alert_dialog, null);
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+        alertDialogBuilder.setView(promptView);
+
+        tag = (EditText) promptView.findViewById(R.id.alert_tag);
+        description = (EditText) promptView.findViewById(R.id.alert_description);
+        alertDialogBuilder.setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        if(null != tag && null != description) {
+                            postAlert(tag.getText().toString(), description.getText().toString());
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                            }
+                        });
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
+    }
+
+    //Sign out Method
+    public void signOut() {
+        mAuth.signOut();
+        Intent intentLg = new Intent(MainActivity.this, GoogleSignInActivity.class);
+        startActivity(intentLg);
+    }
+
     @Override
     protected void onDestroy() {
         stopService(new Intent(this, LocationMonitoringService.class));
@@ -233,38 +298,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mapView.onSaveInstanceState(outState);
-    }
-
-    //Post Alert Method
-    public void postAlert() {
-        if (mLatitude != null && mLongitude != null) {
-            DatabaseReference alertRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS");
-            String pushID = alertRef.push().getKey();
-            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS").child(pushID);
-
-            //DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("TEST_ALERTS").child(mUserId);
-
-            mCalendar = Calendar.getInstance();
-            mSimpleDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String formattedDate = mSimpleDate.format(mCalendar.getTime());
-
-            String lastSeen = formattedDate;
-
-            userPost.put("TAG", "Danger");
-            userPost.put("Description", "New Danger");
-            userPost.put("lat", mLatitude);
-            userPost.put("lng", mLongitude);
-            userPost.put("At", lastSeen);
-
-            userRef.setValue(userPost);
-        }
-    }
-
-    //Sign out Method
-    public void signOut() {
-        mAuth.signOut();
-        Intent intentLg = new Intent(MainActivity.this, GoogleSignInActivity.class);
-        startActivity(intentLg);
     }
 
     /**
@@ -282,7 +315,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     /**
      * Step 2: Check & Prompt Internet connection
      */
@@ -291,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 
-        if (activeNetworkInfo == null || !activeNetworkInfo.isConnected()) {
+        if (null == activeNetworkInfo || !activeNetworkInfo.isConnected()) {
             promptInternetConnect();
             return false;
         }

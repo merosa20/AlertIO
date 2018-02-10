@@ -24,7 +24,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -41,7 +40,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
@@ -59,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private boolean mAlreadyStartedService = false;
 
-    //private Toolbar mapToolbar;
+    private Toolbar mapToolbar;
     private MapView mapView;
     private FloatingActionButton mPostButton;
     private EditText tag = null;
@@ -90,8 +88,8 @@ public class MainActivity extends AppCompatActivity {
         Mapbox.getInstance(this, "pk.eyJ1Ijoic21hbW1lcmkiLCJhIjoiY2pkYWgwbnhhMG5jcTMzcDcwcjQxZGwzOCJ9.Dr4cBXkdzF3OOzZgX9kZGw");
         setContentView(R.layout.activity_main);
 
-        //mapToolbar = (Toolbar) findViewById(R.id.map_toolbar);
-        //setSupportActionBar(mapToolbar);
+        mapToolbar = (Toolbar) findViewById(R.id.map_toolbar);
+        setSupportActionBar(mapToolbar);
 
         mPostButton = (FloatingActionButton) findViewById(R.id.floatingActionButton);
         mPostButton.setOnClickListener(new View.OnClickListener() {
@@ -100,18 +98,16 @@ public class MainActivity extends AppCompatActivity {
                 showInputDialog();
             }
         });
-
-        //TODO : SIGN OUT BUTTON
-
         mapView = findViewById(R.id.mapView);
         mapView.setStyleUrl(Style.MAPBOX_STREETS);
 
-        if (null != mLatitude && null != mLongitude) {
+        //TODO : Center Map to current location
+        /*if (null != mLatitude && null != mLongitude) {
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(new LatLng(mLatitude, mLongitude)) // Sets the center of the map to Chicago
                     .zoom(11)                            // Sets the zoom
                     .build();
-        }
+        }*/
         mapView.onCreate(savedInstanceState);
 
         mAuth = FirebaseAuth.getInstance();
@@ -126,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         fbDataBase = FirebaseDatabase.getInstance();
-        FrameDBRef = fbDataBase.getReference("Alerts");
+        FrameDBRef = fbDataBase.getReference("TEST_ALERTS");
 
         FrameDBRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -193,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         if(id == R.id.action_log_out){
             signOut();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -243,8 +240,8 @@ public class MainActivity extends AppCompatActivity {
 
             userPost.put("TAG", postTag);
             userPost.put("Description", postDesc);
-            userPost.put("lat", mLatitude);
-            userPost.put("lng", mLongitude);
+            userPost.put("lat", String.valueOf(mLatitude));
+            userPost.put("lng", String.valueOf(mLongitude));
             userPost.put("At", formattedDate);
 
             userRef.setValue(userPost);

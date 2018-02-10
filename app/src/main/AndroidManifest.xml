@@ -19,15 +19,17 @@
             android:value="AIzaSyCQngvyO-4D1v2UINS0sGzovi5JNbEfloo" />
 
         <activity android:name=".GoogleSignInActivity">
+
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
 
         <service android:name=".services.LocationMonitoringService" />
 

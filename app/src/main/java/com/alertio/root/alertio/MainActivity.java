@@ -186,7 +186,11 @@ public class MainActivity extends AppCompatActivity {
 
                                 mClusterManagerPlugin = new ClusterManagerPlugin<MyItem>(MainActivity.this, mapboxMap);
                                 mapboxMap.setOnCameraIdleListener(mClusterManagerPlugin);
-                                CreateClusteredMarkers();
+                                if(readcluster){//control markers plotting flow
+                                    CreateClusteredMarkers();
+                                    readcluster = false;
+                                }
+
                             }
                         });
                     }

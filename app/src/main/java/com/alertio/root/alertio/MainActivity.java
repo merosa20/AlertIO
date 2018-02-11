@@ -50,10 +50,14 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterItem;
+import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -86,6 +90,9 @@ public class MainActivity extends AppCompatActivity {
     Map <String, String> tagm = new HashMap<String, String>();
     Map <String, String> descm = new HashMap<String, String>();
     Map <String, String> idm = new HashMap<String, String>();
+
+    private ClusterManagerPlugin<MyItem> mClusterManagerPlugin;
+    private boolean readcluster = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,16 +183,10 @@ public class MainActivity extends AppCompatActivity {
                                             .zoom(12)
                                             .build());
                                 }
-                                // One way to add a marker view
-                                Set<String> markerKeys = idm.keySet();
 
-                                for(String marker : markerKeys){
-                                    mapboxMap.addMarker(new MarkerOptions()
-                                            .position(new LatLng(latm.get(marker),lngm.get(marker)))
-                                            .title(tagm.get(marker))
-                                            .snippet(descm.get(marker))
-                                    );
-                                }
+                                mClusterManagerPlugin = new ClusterManagerPlugin<MyItem>(MainActivity.this, mapboxMap);
+                                mapboxMap.setOnCameraIdleListener(mClusterManagerPlugin);
+                                CreateClusteredMarkers();
                             }
                         });
                     }
@@ -193,6 +194,19 @@ public class MainActivity extends AppCompatActivity {
                 }, new IntentFilter(LocationMonitoringService.ACTION_LOCATION_BROADCAST)
         );
     }
+
+
+    private void CreateClusteredMarkers() {
+        List<MyItem> items = new ArrayList<MyItem>();
+        Set<String> markerKeys = idm.keySet();
+        for (String marker : markerKeys) {
+            items.add(new MyItem(latm.get(marker), lngm.get(marker),
+                                 tagm.get(marker), descm.get(marker)));
+            mClusterManagerPlugin.clearItems();
+            mClusterManagerPlugin.addItems(items);
+        }
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -555,4 +569,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
+    public static class MyItem implements ClusterItem {
+        private final LatLng mPosition;
+        private String mTitle;
+        private String mSnippet;
+
+        public MyItem(double lat, double lng) {
+            mPosition = new LatLng(lat, lng);
+            mTitle = null;
+            mSnippet = null;
+        }
+
+        public MyItem(double lat, double lng, String title, String snippet) {
+            mPosition = new LatLng(lat, lng);
+            mTitle = title;
+            mSnippet = snippet;
+        }
+
+        @Override
+        public LatLng getPosition() {
+            return mPosition;
+        }
+
+        @Override
+        public String getTitle() {
+            return mTitle;
+        }
+
+        @Override
+        public String getSnippet() {
+            return mSnippet;
+        }
+
+        public void setTitle(String title) {
+            mTitle = title;
+        }
+
+        public void setSnippet(String snippet) {
+            mSnippet = snippet;
+        }
+    }
 }

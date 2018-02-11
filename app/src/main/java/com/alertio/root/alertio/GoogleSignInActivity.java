@@ -9,11 +9,12 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -32,7 +33,7 @@ public class GoogleSignInActivity extends AppCompatActivity {
     private SignInButton mGoogleSignInBtn;
 
     private static final String TAG = "SignInActivity";
-    private static final int RC_SIGN_IN = 1;
+    private static final int RC_SIGN_IN = 9001;
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -55,9 +56,6 @@ public class GoogleSignInActivity extends AppCompatActivity {
             }
         };
 
-        mGoogleSignInBtn = (SignInButton) findViewById(R.id.sign_in_button);
-        mGoogleSignInBtn.setSize(SignInButton.SIZE_STANDARD);
-
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
@@ -73,6 +71,8 @@ public class GoogleSignInActivity extends AppCompatActivity {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
+        mGoogleSignInBtn = (SignInButton) findViewById(R.id.sign_in_button);
+        mGoogleSignInBtn.setSize(SignInButton.SIZE_STANDARD);
         mGoogleSignInBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -105,13 +105,16 @@ public class GoogleSignInActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == RC_SIGN_IN) {
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            if(result.isSuccess()) {
-                GoogleSignInAccount account = result.getSignInAccount();
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                // Google Sign In was successful, authenticate with Firebase
+                GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account);
-            }
-            else {
-
+            } catch (ApiException e) {
+                // Google Sign In failed, update UI appropriately
+                Log.w(TAG, "Google sign in failed", e);
+                // [START_EXCLUDE]
+                // [END_EXCLUDE]
             }
         }
     }

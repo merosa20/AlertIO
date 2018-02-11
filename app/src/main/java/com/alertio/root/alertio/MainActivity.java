@@ -44,6 +44,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
@@ -80,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
     private SimpleDateFormat mSimpleDate;
 
     private Map userPost = new HashMap();
-    Float lat; Float lng; String TAGG; String desc;
     Map <String, Double> latm = new HashMap<String, Double>();
     Map <String, Double> lngm = new HashMap<String, Double>();
     Map <String, String> tagm = new HashMap<String, String>();
@@ -103,16 +103,9 @@ public class MainActivity extends AppCompatActivity {
                 showInputDialog();
             }
         });
+
         mapView = findViewById(R.id.mapView);
         mapView.setStyleUrl(Style.MAPBOX_STREETS);
-
-        //TODO : Center Map to current location
-        /*if (null != mLatitude && null != mLongitude) {
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(new LatLng(mLatitude, mLongitude)) // Sets the center of the map to Chicago
-                    .zoom(11)                            // Sets the zoom
-                    .build();
-        }*/
         mapView.onCreate(savedInstanceState);
 
         mAuth = FirebaseAuth.getInstance();
@@ -141,17 +134,6 @@ public class MainActivity extends AppCompatActivity {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        mAuth = FirebaseAuth.getInstance();
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if (user == null) {
-                    startActivity(new Intent(MainActivity.this, GoogleSignInActivity.class));
-                }
-            }
-        };
-
         fbDataBase = FirebaseDatabase.getInstance();
         FrameDBRef = fbDataBase.getReference("TEST_ALERTS");
 
@@ -172,24 +154,7 @@ public class MainActivity extends AppCompatActivity {
                         idm.put(dev.getKey(), "miaou");
                     }
                 }
-
-                mapView.getMapAsync(new OnMapReadyCallback() {
-                    @Override
-                    public void onMapReady(MapboxMap mapboxMap) {
-                        // One way to add a marker view
-                        Set<String> markerKeys = idm.keySet();
-
-                        for(String marker : markerKeys){
-                            mapboxMap.addMarker(new MarkerOptions()
-                                    .position(new LatLng(latm.get(marker),lngm.get(marker)))
-                                    .title(tagm.get(marker))
-                                    .snippet(descm.get(marker))
-                            );
-                        }
-                    }
-                });
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
@@ -201,7 +166,30 @@ public class MainActivity extends AppCompatActivity {
                     public void onReceive(Context context, Intent intent) {
                         mLatitude = intent.getDoubleExtra(LocationMonitoringService.EXTRA_LATITUDE, 0.5);
                         mLongitude = intent.getDoubleExtra(LocationMonitoringService.EXTRA_LONGITUDE, 0.5);
+
+                        mapView.getMapAsync(new OnMapReadyCallback() {
+                            @Override
+                            public void onMapReady(MapboxMap mapboxMap) {
+                                if(null != mLatitude && null != mLongitude) {
+                                    mapboxMap.setCameraPosition(new CameraPosition.Builder()
+                                            .target(new LatLng(mLatitude, mLongitude))
+                                            .zoom(12)
+                                            .build());
+                                }
+                                // One way to add a marker view
+                                Set<String> markerKeys = idm.keySet();
+
+                                for(String marker : markerKeys){
+                                    mapboxMap.addMarker(new MarkerOptions()
+                                            .position(new LatLng(latm.get(marker),lngm.get(marker)))
+                                            .title(tagm.get(marker))
+                                            .snippet(descm.get(marker))
+                                    );
+                                }
+                            }
+                        });
                     }
+
                 }, new IntentFilter(LocationMonitoringService.ACTION_LOCATION_BROADCAST)
         );
     }
@@ -276,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
             String formattedDate = mSimpleDate.format(mCalendar.getTime());
 
             userPost.put("TAG", postTag);
-            userPost.put("Description", postDesc);
+            userPost.put("desc", postDesc);
             userPost.put("lat", String.valueOf(mLatitude));
             userPost.put("lng", String.valueOf(mLongitude));
             userPost.put("At", formattedDate);

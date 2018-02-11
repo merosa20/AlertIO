@@ -13,7 +13,7 @@
     <string name="sign_out">Sign Out"</string>
     <string name="service1">Service 1</string>
     <string name="title_activity_main2">Main2Activity</string>
-    <string name="action_log_out">Log Out</string>
+    <string name="action_sign_out">Sign Out</string>
     <string name="action_post_alert">Alert</string>
     <string name="map_toolbar">Map Toolbar</string>
     <string name="action_settings">Settings</string>
